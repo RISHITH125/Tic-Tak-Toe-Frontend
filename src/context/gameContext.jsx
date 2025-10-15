@@ -1,6 +1,6 @@
 import { useContext, useState} from "react";
 import { GameContext } from "../utils/gameContext";
-const SERVER_HOST = import.meta.env.VITE_SERVER_HOST || 'http://localhost:3000';
+import { login } from "../utils/auth";
 
 export const useTicTacToe = () => {
     const context = useContext(GameContext);
