@@ -1,4 +1,4 @@
-import { login } from './auth';
+import { login } from './serverutils';
 
 
 /**
@@ -10,9 +10,11 @@ import { login } from './auth';
  * - { status: 'notok', reason: 'username_taken'|'auth_failed'|'nakama_error'|... }
  * - { status: 'ok', session, nakama }
  */
-async function buttonFunction(type, playerName, setGetName, setPlayerName,password) {
+
+
+async function buttonFunction(type, playerName, setGetName, setPlayerName,password,setSession) {
   if (!playerName) {
-    setGetName(true);
+     if (typeof setGetName === 'function') setGetName(true);
     return { status: 'need_name' };
   }
 
@@ -39,10 +41,10 @@ async function buttonFunction(type, playerName, setGetName, setPlayerName,passwo
         setGetName(true);
         return { status: 'notok', reason: result.status || 'auth_failed' };
       }
-
+      console.log('buttonFunction login result', result);
       // Extract session object
       session = result.session ? result.session : result;
-      if (!session || !session.token) {
+      if (!session) {
         // Unexpected reply
         return { status: 'notok', reason: 'auth_invalid_response' };
       }
@@ -50,6 +52,7 @@ async function buttonFunction(type, playerName, setGetName, setPlayerName,passwo
       // Persist session and update username in UI
       try {
         localStorage.setItem('session', JSON.stringify(session));
+        setSession(session);
         if (setPlayerName && session.username) setPlayerName(session.username);
       } catch (e) {
         console.warn('Failed to persist session', e);

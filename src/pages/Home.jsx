@@ -1,25 +1,21 @@
 import {useState, useEffect } from "react"
-import { useTicTacToe } from "../context/gameContext"
+import { useTicTacToe } from "../context/gameState"
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
-import {buttonFunction} from "../utils/buttonFunction"
 
 function Home() {
     const navigate = useNavigate();
 
-    const [getName, setGetName] = useState(false);
+    // local UI state
     const [nameError, setNameError] = useState(false);
     const [authError, setAuthError] = useState('');
     const [password, setPassword] = useState('');
     const [passwordError, setPasswordError] = useState(false);
 
-    const { playerName, setPlayerName, modalButtonType, setModalButtonType } = useTicTacToe();
+    const { playerName, setPlayerName, modalType, startMatch, modalOpen, setModalOpen } = useTicTacToe();
 
-    // On mount: if there's a stored session, populate playerName from it so
-    // we use the session username before attempting login.
     useEffect(() => {
-        // Only set from stored session if we don't already have a playerName
         if (playerName) return;
         try {
             const raw = localStorage.getItem('session');
@@ -30,48 +26,25 @@ function Home() {
                 }
             }
         } catch (err) {
-            // ignore malformed session but log for debugging
             console.warn('Failed to read stored session', err);
         }
     }, [playerName, setPlayerName]);
 
-    // Keep stored session.username in sync with playerName changes so subsequent
-    // attempts will use the updated username.
-    useEffect(() => {
-        try {
-            const raw = localStorage.getItem('session');
-            if (raw) {
-                const s = JSON.parse(raw);
-                if (playerName && s?.username !== playerName) {
-                    s.username = playerName;
-                    localStorage.setItem('session', JSON.stringify(s));
-                }
-            }
-        } catch (err) {
-            // ignore malformed session but log for debugging
-            console.warn('Failed to sync session username', err);
-        }
-    }, [playerName]);
-
     return (
         <div className="h-[100vh] w-[100vw] flex flex-col gap-10 justify-center items-center bg-gradient-to-b from-gray-900 to-black">
-            <Navbar playerName={playerName} />
-            <div>Hero</div>
-
+            <div className="font-extrabold text-6xl">TIC-TAC-TOE</div>
+            <div className="text-2xl">username: {playerName}</div>
             <div className="flex justify-between w-auto gap-2">
                 <button className="w-auto border-2 border-amber-500/60 p-2 rounded-md font-bold bg-amber-600/60 hover:bg-amber-600/80 backdrop-blur-sm transition"
                     onClick={async () => {
                         setAuthError('');
-                        if (!playerName) {
-                            setModalButtonType("quick");
-                            setGetName(true);
-                            return;
-                        }
-                        const res = await buttonFunction("quick", playerName, setGetName, setPlayerName,password);
+                        // startMatch will set modal type and open modal if needed
+                        const res = await startMatch('quick');
                         if (res?.status === 'ok') {
                             navigate('/board');
                         } else if (res?.status === 'need_name') {
-                            setGetName(true);
+                            // provider opened modal
+                            setModalOpen(true);
                         } else {
                             setAuthError(res?.reason || 'Unknown error');
                         }
@@ -83,16 +56,11 @@ function Home() {
                 <button className="w-auto border-2 border-blue-400/60 p-2 rounded-md font-bold bg-blue-500/60 hover:bg-blue-500/80 backdrop-blur-sm transition"
                     onClick={async () => {
                         setAuthError('');
-                        if (!playerName) {
-                            setModalButtonType("private");
-                            setGetName(true);
-                            return;
-                        }
-                        const res = await buttonFunction("private", playerName, setGetName, setPlayerName,password);
+                        const res = await startMatch('private');
                         if (res?.status === 'ok') {
                             navigate('/board');
                         } else if (res?.status === 'need_name') {
-                            setGetName(true);
+                            setModalOpen(true);
                         } else {
                             setAuthError(res?.reason || 'Unknown error');
                         }
@@ -104,7 +72,7 @@ function Home() {
 
             <div>LeaderBoard</div>
 
-            { getName && (
+            { modalOpen && (
                 <div
                     className="absolute top-0 left-0 h-[100vh] w-[100vw] bg-black/99 z-100 flex justify-center items-center"
                     onClick={() => nameError && setNameError(false)}
@@ -119,13 +87,13 @@ function Home() {
                                 setNameError(true);
                                 return;
                             }
-                            const res = await buttonFunction(modalButtonType, playerName, setGetName, setPlayerName,password);
+                            const res = await startMatch(modalType, { password });
                             if (res?.status === 'ok') {
-                                setGetName(false);
+                                setModalOpen(false);
                                 setNameError(false);
                                 navigate('/board');
                             } else if (res?.status === 'need_name') {
-                                setGetName(true);
+                                setModalOpen(true);
                             } else {
                                 // keep modal open and show reason
                                 setNameError(true);
