@@ -24,7 +24,7 @@ function Home() {
   useEffect(()=>{
     const session = JSON.parse(localStorage.getItem("session"));
     setPlayerName(session?.username || "")
-  },[playerName,setPlayerName])
+  },[setPlayerName])
 
  
   return (
