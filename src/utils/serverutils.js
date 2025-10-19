@@ -8,7 +8,6 @@ const API_URL = import.meta.env.VITE_SERVER_HOST || "http://localhost:3000";
  *
  */
 
-
 export const login = async (username, password) => {
   try {
     const response = await axios.post(`${API_URL}/auth/signin`, {
@@ -17,7 +16,6 @@ export const login = async (username, password) => {
     });
 
     return response.data;
-
   } catch (error) {
     // If the server returned a structured error payload, preserve it so callers
     // can inspect status/message (e.g. Conflict: User already exists).
@@ -52,12 +50,15 @@ export const refreshSession = async (session) => {
   }
 };
 
-
 export const quickMatch = async (session) => {
   try {
-    const response = await axios.post(`${API_URL}/game/quick-match`, {}, {
-  headers: { Authorization: `Bearer ${session.token}` }
-});
+    const response = await axios.post(
+      `${API_URL}/game/quick-match`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${session.token}` },
+      }
+    );
 
     return response.data;
   } catch (error) {
@@ -71,3 +72,26 @@ export const quickMatch = async (session) => {
   }
 };
 
+export const getLeaderboard = async (session) => {
+  let response; 
+
+  try {
+    if (!session || !session.token) {
+      response = await axios.get(`${API_URL}/user/leaderboard`);
+    } else {
+      response = await axios.get(`${API_URL}/user/leaderboard`, {
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
+    }
+
+    return response.data; 
+  } catch (error) {
+    const serverMessage =
+      error?.response?.data?.message || error?.response?.data?.error || null;
+    if (serverMessage) {
+      error.message = serverMessage;
+      throw error;
+    }
+    throw error;
+  }
+};

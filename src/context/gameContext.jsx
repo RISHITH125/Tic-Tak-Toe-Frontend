@@ -3,6 +3,7 @@ import { buttonFunction } from "../utils/buttonFunction";
 import { GameContext } from "./gameState";
 import { io } from "socket.io-client";
 import { quickMatch } from "../utils/serverutils";
+import { getLeaderboard } from "../utils/serverutils";
 
 const API_URL = import.meta.env.VITE_SERVER_HOST || "http://localhost:3000";
 
@@ -27,6 +28,23 @@ export const GameProvider = ({ children }) => {
     const [matchStatus, setMatchStatus] = useState(null);
     const [opponentName, setOpponentName] = useState('');
     const [board_error, setBoard_Error] = useState(null); // <-- Keep this state
+    const [leaderboard, setLeaderboard] = useState(null);
+
+
+
+    useEffect(() => {
+        const fetchLeaderboard = async () => {
+            try {
+                const data = await getLeaderboard(session);
+                setLeaderboard(data.leaderboard);
+            } catch (error) {
+                console.error("Error fetching leaderboard:", error);
+            }
+        };
+        fetchLeaderboard();
+        const intervalId = setInterval(fetchLeaderboard, 5000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     const socketRef = useRef(null);
 
@@ -46,7 +64,7 @@ export const GameProvider = ({ children }) => {
         setBoard(Array(9).fill(null));
         setOpponentName(''); // Reset to empty string, not null
         setPlayerSymbol(null);
-        
+
         // --- CRITICAL RESETTED STATES ---
         setRoomId(null);
         setWinner(null);
@@ -72,7 +90,7 @@ export const GameProvider = ({ children }) => {
         if (!sock) return;
 
         sock.on('connect', () => {
-             // console.log('socket connected', sock.id);
+            // console.log('socket connected', sock.id);
         });
 
         sock.on('connect_error', (err) => {
@@ -101,8 +119,8 @@ export const GameProvider = ({ children }) => {
         });
 
         sock.on('game_start', () => {
-             // Board UI enabled only if it's the player's turn, which is set in symbol_assigned 
-             console.log('Game started');
+            // Board UI enabled only if it's the player's turn, which is set in symbol_assigned 
+            console.log('Game started');
         });
 
         // FIX 3: Reworked logic inside move_made for reliable turn switching
@@ -111,10 +129,10 @@ export const GameProvider = ({ children }) => {
                 if (payload.gameState?.board && Array.isArray(payload.gameState.board)) {
                     setBoard(payload.gameState.board.slice());
                     const currentTurnSymbol = payload.gameState.currentTurn;
-                    
+
                     const localPlayerSymbol = localStorage.getItem('playerSymbol');
 
-                    if(localPlayerSymbol === currentTurnSymbol){
+                    if (localPlayerSymbol === currentTurnSymbol) {
                         setIsMyTurn(true);
                         setDisableBoardUI(false); // <--- Enable board when it's our turn
                     } else {
@@ -138,7 +156,7 @@ export const GameProvider = ({ children }) => {
         });
 
         // --- Client-Side Error Handling for Invalid Move ---
-        sock.on("error",(payload)=>{
+        sock.on("error", (payload) => {
             // Check if the error is the structured JSON we expect from the server
             try {
                 if (payload.flag === "invalid_move") { // Note the capitalization matching your server's throw
@@ -159,7 +177,7 @@ export const GameProvider = ({ children }) => {
             }
         });
 
-        sock.on("game_over",(payload)=>{
+        sock.on("game_over", (payload) => {
             // update the board one last time
             try {
                 if (payload.gameState?.board && Array.isArray(payload.gameState.board)) {
@@ -181,34 +199,32 @@ export const GameProvider = ({ children }) => {
             setMatchStatus("terminated");
             terminateMatchCleanup();
         });
-    }, [playerName, terminateMatchCleanup]); 
+    }, [playerName, terminateMatchCleanup]);
 
-    const TurnComplete = (index) =>{
+    const TurnComplete = (index) => {
         setIsMyTurn(false);
         setDisableBoardUI(true);
         socketRef.current.emit('player_move', { roomId, index });
     }
 
-    const gameOver=() =>{
-        // This is the manual client-side action to leave a game (e.g., button click)
+    const gameOver = () => {
         if (socketRef.current) {
-            // Emit an event to tell the server we are leaving (if needed)
-            // socketRef.current.emit('leave_match', { roomId }); 
-            socketRef.current.disconnect(); // This will trigger cleanup
+            socketRef.current.disconnect();
         } else {
-            // If socket is already null, just run the cleanup
             terminateMatchCleanup();
         }
     }
 
+
+
+
+
     const startMatch =
         async (type, options = {}) => {
-            // Clear any lingering errors/winner state before starting a new flow
             setError(null);
             setWinner(null);
             setBoard_Error(null);
-            
-            // ensure modalType is current
+
             setModalType(type);
             setLoading(true);
             setDisableBoardUI(true);
@@ -250,6 +266,8 @@ export const GameProvider = ({ children }) => {
         }
 
 
+
+
     const value = {
         // state
         roomId,
@@ -270,6 +288,7 @@ export const GameProvider = ({ children }) => {
         matchStatus,
         opponentSymbol,
         board_error,
+        leaderboard,
 
         // setters
         setPlayerName,
@@ -286,7 +305,7 @@ export const GameProvider = ({ children }) => {
         setOpponentName,
         setModalOpen,
         // --- ADDED SETTER FOR EXPLICIT CLEARANCE IF NEEDED ---
-        setBoard_Error, 
+        setBoard_Error,
 
         TurnComplete,
         // helpers
