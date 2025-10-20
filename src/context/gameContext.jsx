@@ -42,7 +42,7 @@ export const GameProvider = ({ children }) => {
             }
         };
         fetchLeaderboard();
-        const intervalId = setInterval(fetchLeaderboard, 5000);
+        const intervalId = setInterval(fetchLeaderboard, 15000);
         return () => clearInterval(intervalId);
     }, []);
 

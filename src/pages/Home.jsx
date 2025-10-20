@@ -1,8 +1,7 @@
 import { useState ,useEffect} from "react";
 import { useTicTacToe } from "../context/gameState";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-
+import "../index.css"
 function Home() {
   const navigate = useNavigate();
 
@@ -44,15 +43,17 @@ function Home() {
       </div>
 
       {/* Player Info */}
+      {playerName && (
       <div className="text-xl text-gray-300 mb-8">
         Username:{" "}
         <span className="text-amber-400 font-semibold">
-          {playerName || "—"}
+          {playerName || ""}
         </span>
       </div>
+      )}
 
       {/* Buttons */}
-      <div className="flex justify-center gap-6 mb-12">
+      <div className="flex justify-center gap-6 mb-12 z-100">
         <button
           className="px-8 py-3 border-2 border-amber-500/60 font-bold rounded-lg bg-amber-600/60 hover:bg-amber-600/80 text-white shadow-[0_0_10px_rgba(255,200,100,0.3)] hover:shadow-[0_0_20px_rgba(255,200,100,0.5)] transition-all duration-300"
           onClick={async () => {
@@ -91,7 +92,32 @@ function Home() {
 
       {/* Leaderboard placeholder */}
             {/* Leaderboard */}
-      <div className="mt-6 w-[90%] sm:w-[600px] bg-gray-900/50 border border-gray-700 rounded-xl p-4 backdrop-blur-md shadow-[0_0_25px_rgba(255,255,255,0.1)]">
+      <div 
+        // id="leaderboard-scroll"
+        className="relative
+    overflow-y-auto 
+    max-h-[40vh]
+    mt-6 w-[90%] sm:w-[600px]
+    bg-gray-900/50 border border-gray-700 rounded-xl 
+    p-4 backdrop-blur-md 
+    shadow-[0_0_25px_rgba(255,255,255,0.1)]
+    scroll-smooth
+    touch-pan-y
+      "
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgb(100 116 139 / 0.6) transparent',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.scrollbarColor = 'rgb(100 116 139 / 0.9) transparent';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.scrollbarColor = 'rgb(100 116 139 / 0.6) transparent';
+          }}
+
+      >
+         <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-black/60 to-transparent pointer-events-none"></div>
         <h2 className="text-2xl font-bold text-center mb-4 text-amber-400 drop-shadow-[0_0_8px_rgba(255,200,100,0.5)]">
           Leaderboard
         </h2>
