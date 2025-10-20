@@ -53,7 +53,7 @@ function Home() {
       )}
 
       {/* Buttons */}
-      <div className="flex justify-center gap-6 mb-12 z-100">
+      <div className="flex justify-center gap-6 mb-12 z-10">
         <button
           className="px-8 py-3 border-2 border-amber-500/60 font-bold rounded-lg bg-amber-600/60 hover:bg-amber-600/80 text-white shadow-[0_0_10px_rgba(255,200,100,0.3)] hover:shadow-[0_0_20px_rgba(255,200,100,0.5)] transition-all duration-300"
           onClick={async () => {
@@ -188,7 +188,7 @@ function Home() {
       {/* Auth Modal */}
       {modalOpen && (
         <div
-          className="absolute top-0 left-0 h-full w-full bg-black/95 backdrop-blur-md flex justify-center items-center z-50"
+          className="absolute top-0 left-0 h-full w-full bg-black/95 backdrop-blur-md flex justify-center items-center z-80"
           onClick={() => nameError && setNameError(false)}
         >
           <form
